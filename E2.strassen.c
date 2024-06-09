@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
+#include <math.h>
 
 typedef struct {
 
@@ -24,7 +25,6 @@ void destr(MAT* mat) {
      }
 
      free(mat->matrix); 
-     free(mat);
 }
 
 void fill(MAT* mat) {
@@ -42,7 +42,7 @@ void fill(MAT* mat) {
                switch(choice) {
                     case 1: {
                          printf("[%d][%d]:", i + 1, j + 1);
-                         scanf("%d", mat->matrix[i][j]);
+                         scanf("%d", &(mat->matrix[i][j]));
                          break;
                     }
                     case 2: {
@@ -54,32 +54,35 @@ void fill(MAT* mat) {
      }
 }
 
-void print(MAT mat) {
-     printf("%c", (char)214);
+void show(MAT mat) {
      
      for(int i = 0; i < mat.size; i++) {
           for(int j = 0; j < mat.size; j++) {
-               printf("%d", mat.matrix[i][j]);
-               if(i==0 && j==mat.size-1)
-                    printf("%c\n",(char)183);
-               else if(j==mat.size-1)
-                    printf("%c\n",(char)186);
-               else
-                    printf(" ");
+               printf("%d ", mat.matrix[i][j]);
           }
-          if(i==mat.size)
-               printf("%c",(char)211);
-          else
-               printf("%c",(char)186)
+          printf("\n");
      }
-     printf("%c", (char)189);
 
 }
 
 
 
 int main(){
+     srand(time(0));
+     MAT m1;
+     int size = 0;
 
+     do{
+     printf("napiste rozmer n matice 2^n x 2^n: ");
+     scanf("%d", &size);
+     } while(size < 1);
+     
+     printf("%d", (int)pow(2,size));
+     
+     constr(&m1,(int)pow(2,size));
+     fill(&m1);
+     show(m1);
+     destr(&m1);
 }
 
 
