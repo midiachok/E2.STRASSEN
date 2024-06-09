@@ -65,7 +65,17 @@ void show(MAT mat) {
 
 }
 
-
+void add_subtract_matrix(MAT A, MAT B,MAT* C, int add) {
+    for (int i = 0; i < C->size; i++) {
+        for (int j = 0; j < C->size; j++) {
+            if (add) {
+                C->matrix[i][j] = A.matrix[i][j] + B.matrix[i][j];
+            } else {
+                C->matrix[i][j] = A.matrix[i][j] - B.matrix[i][j];
+            }
+        }
+    }
+}
 
 void mat_multiply_strassen(MAT* A, MAT* B, MAT* C) {
 
@@ -107,6 +117,11 @@ void mat_multiply_strassen(MAT* A, MAT* B, MAT* C) {
                B22.matrix[i][j] = B->matrix[i + newSize][j + newSize];
           }
      }
+     
+     // M1 = (A11 + A22) * (B11 + B22)
+     add_subtract_matrix(A11, A22, &AResult, 1);
+     add_subtract_matrix(B11, B22, &BResult, 1);
+     mat_multiply_strassen(&AResult, &BResult, &M1); 
 }
 
 int main(){
