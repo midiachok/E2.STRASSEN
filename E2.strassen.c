@@ -150,6 +150,22 @@ void mat_multiply_strassen(MAT* A, MAT* B, MAT* C) {
      add_subtract_matrix(B21, B22, &BResult, 1);
      mat_multiply_strassen(&AResult, &BResult, &M7);
      
+     // C11 = M1 + M4 - M5 + M7
+     add_subtract_matrix(M1, M4, &AResult, 1);
+     add_subtract_matrix(AResult, M5, &BResult, 0);
+     add_subtract_matrix(BResult, M7, &C11, 1);
+
+     // C12 = M3 + M5
+     add_subtract_matrix(M3, M5, &C12, 1);
+
+     // C21 = M2 + M4
+     add_subtract_matrix(M2, M4, &C21, 1);
+
+     // C22 = M1 + M3 - M2 + M6
+     add_subtract_matrix(M1, M3, &AResult, 1);
+     add_subtract_matrix(AResult, M2, &BResult, 0);
+     add_subtract_matrix(BResult, M6, &C22, 1);
+     
      for (int i = 0; i < newSize; i++) { //zdruzenie matic
         for (int j = 0; j < newSize; j++) {
             C->matrix[i][j] = C11.matrix[i][j];
@@ -158,6 +174,28 @@ void mat_multiply_strassen(MAT* A, MAT* B, MAT* C) {
             C->matrix[i + newSize][j + newSize] = C22.matrix[i][j];
         }
     }
+    
+    destr(&A11);
+    destr(&A12);
+    destr(&A21);
+    destr(&A22);
+    destr(&B11);
+    destr(&B12);
+    destr(&B21);
+    destr(&B22);
+    destr(&C11);
+    destr(&C12);
+    destr(&C21);
+    destr(&C22);
+    destr(&M1);
+    destr(&M2);
+    destr(&M3);
+    destr(&M4);
+    destr(&M5);
+    destr(&M6);
+    destr(&M7);
+    destr(&AResult);
+    destr(&BResult);
 }
 
 int main(){
