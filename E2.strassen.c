@@ -79,7 +79,11 @@ void add_subtract_matrix(MAT A, MAT B,MAT* C, int add) {
 }
 
 void mat_multiply_strassen(MAT* A, MAT* B, MAT* C) {
-
+     if (C->size == 1) { //pripad, ked nasobime matice 1x1
+          C->matrix[0][0] = A->matrix[0][0] * B->matrix[0][0];
+          return;
+     }
+     
      int newSize = C->size / 2;
      MAT A11,A12,A21,A22,B11,B12,B21,B22,C11,C12,C21,C22,M1,M2,M3,M4,M5,M6,M7,AResult,BResult;
      constr(&A11 ,newSize);
