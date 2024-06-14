@@ -5,6 +5,6 @@
 5. Funkcia na zobrazenie matice show() tlačí obsah matice na obrazovku.
 6. Funkcia na sčítanie a odčítanie matíc add_subtract_matrix() sčíta alebo odčíta dve matice v závislosti od hodnoty add. 
 7. Funkcia na násobenie matíc pomocou Strassenovho algoritmu mat_multiply_strassen() pracuje takto:
-a) Ak je veľkosť matice 1, vynásobí jediné prvky a skončí.
-b) Inak rozdelí matice A a B na štyri submatice a vykoná výpočty podľa Strassenovho algoritmu.
-c) Výsledné submatice spočíta a uloží do výslednej matice C.
+Ak je veľkosť matice 1, vynásobí jediné prvky a skončí. ->
+ Inak rozdelí matice A a B na štyri submatice a vykoná výpočty podľa Strassenovho algoritmu. ->
+ Výsledné submatice spočíta a uloží do výslednej matice C.
