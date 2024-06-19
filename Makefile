@@ -5,7 +5,7 @@ TARGET = exac.exe
 OBJ_FILES = main.o matrices.o
 
 $(TARGET): $(OBJ_FILES)
-	$(CC) $(CFLAGS) $(OBJ_FILES) -o $(TARGET)
+	$(CC) $(CFLAGS) $(OBJ_FILES) -lm -o $(TARGET)
 
 main.o: main.c matrices.h
 	$(CC) $(CFLAGS) -c main.c
