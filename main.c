@@ -22,27 +22,41 @@ void choose_matrix_creation_method(MAT* matrix, int n) {
     switch (type) {
     case 1:
         printf("Creating matrix manually:\n");
-        mat_unit(matrix);
+        if (mat_create_with_type(matrix, pow(2, n), pow(2, n), 1) != 0) {
+            printf("Failed to create matrix manually\n");
+            return;
+        }
         break;
     case 2:
         printf("Creating matrix with random values:\n");
-        mat_random(matrix);
+        if (mat_create_with_type(matrix, pow(2, n), pow(2, n), 2) != 0) {
+            printf("Failed to create matrix with random values\n");
+            return;
+        }
         break;
     case 3:
         printf("Creating identity matrix:\n");
-        mat_unit(matrix);
+        if (mat_create_with_type(matrix, pow(2, n), pow(2, n), 3) != 0) {
+            printf("Failed to create identity matrix\n");
+            return;
+        }
         break;
     case 4: {
         char filename[100];
         printf("Enter the filename to load the matrix from: ");
         scanf("%s", filename);
-        mat_create_by_file(matrix, filename);
-
+        if (mat_create_by_file(matrix, filename) != 0) {
+            printf("Failed to load matrix from file\n");
+            return;
+        }
 
         int required_size = pow(2, n);
         if (matrix->rows != required_size || matrix->cols != required_size) {
             release_matrix(matrix);
-            initialize_matrix(matrix, pow(2, n), pow(2, n));
+            if (initialize_matrix(matrix, required_size, required_size) != 0) {
+                printf("Failed to initialize matrix to the required size\n");
+                return;
+            }
             printf("Matrix size does not match required size (2^%d x 2^%d). Please choose again.\n", n, n);
             choose_matrix_creation_method(matrix, n);
         }
@@ -56,7 +70,6 @@ void choose_matrix_creation_method(MAT* matrix, int n) {
     printf("Matrix created:\n");
     print_matrix_info(*matrix);
 }
-
 
 
 void save_matrix_with_prompt(MAT* matrix) {

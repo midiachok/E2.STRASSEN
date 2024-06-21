@@ -5,21 +5,172 @@
 #include <math.h>
 #pragma warning(disable:4996)
 
-//initialize a matrix
-void initialize_matrix(MAT* mat, int rows, int cols) {
+// initialize a matrix with given dimensions
+int initialize_matrix(MAT* mat, int rows, int cols) {
+    if (rows <= 0 || cols <= 0) {
+        return -1; // invalid dimensions
+    }
+
     mat->rows = rows;
     mat->cols = cols;
     mat->size = rows * cols;
     mat->matrix = (int*)malloc(mat->size * sizeof(int));
+
+    if (mat->matrix == NULL) {
+        return -1; // memory allocation failed
+    }
+
+    return 0; // success
 }
 
-//release the memory allocated for a matrix
+// release dynamically allocated memory for a matrix
 void release_matrix(MAT* mat) {
     free(mat->matrix);
 }
 
+// create an identity matrix
+int mat_unit(MAT* mat) {
+    if (mat->rows != mat->cols) {
+        return -1; // identity matrix must be square
+    }
 
-//print the content of a matrix
+    for (int i = 0; i < mat->rows; i++) {
+        for (int j = 0; j < mat->cols; j++) {
+            MAT_AT(*mat, i, j) = (i == j) ? 1 : 0;
+        }
+    }
+
+    return 0; // success
+}
+
+// fill a matrix with random values
+void mat_random(MAT* mat) {
+    srand(time(NULL));
+    for (int i = 0; i < mat->rows; i++) {
+        for (int j = 0; j < mat->cols; j++) {
+            MAT_AT(*mat, i, j) = rand() % 200 - 100;
+        }
+    }
+}
+
+// create a matrix based on the specified type
+int mat_create_with_type(MAT* mat, int rows, int cols, int type) {
+    // initialize the matrix with the specified dimensions
+    if (initialize_matrix(mat, rows, cols) != 0) {
+        printf("Failed to initialize matrix.\n");
+        return -1;
+    }
+
+    switch (type) {
+    case 1: {
+        // manually create matrix
+        printf("Enter matrix elements row by row:\n");
+        for (int i = 0; i < rows; i++) {
+            for (int j = 0; j < cols; j++) {
+                printf("Enter element at position (%d, %d): ", i, j);
+                scanf("%lf", &MAT_AT(*mat, i, j));
+            }
+        }
+        break;
+    }
+    case 2:
+        // create matrix with random values
+        mat_random(mat);
+        break;
+    case 3:
+        // create identity matrix
+        if (mat_unit(mat) != 0) {
+            printf("Failed to create identity matrix.\n");
+            return -1;
+        }
+        break;
+    case 4: {
+        // load matrix from file
+        char filename[100];
+        printf("Enter the filename to load the matrix from: ");
+        scanf("%s", filename);
+
+        if (mat_create_by_file(mat, filename) != 0) {
+            printf("Failed to load matrix from file.\n");
+            return -1;
+        }
+
+        // check if loaded matrix size matches required size
+        int required_size = pow(2, rows);
+        if (mat->rows != required_size || mat->cols != required_size) {
+            release_matrix(mat);
+            if (initialize_matrix(mat, required_size, required_size) != 0) {
+                printf("Failed to initialize matrix to the required size.\n");
+                return -1;
+            }
+            printf("Matrix size does not match required size (2^%d x 2^%d). Please choose again.\n", rows, rows);
+            return mat_create_with_type(mat, rows, cols, type); // recursively try again
+        }
+        break;
+    }
+    default:
+        printf("Invalid matrix type.\n");
+        return -1;
+    }
+
+    return 0; // success
+}
+
+// create a matrix from a file
+int mat_create_by_file(MAT* mat, const char* filename) {
+    FILE* file = fopen(filename, "r");
+    if (file == NULL) {
+        printf("Error opening file: %s\n", filename);
+        return -1; // return error code
+    }
+
+    if (fscanf(file, "%d%d", &mat->rows, &mat->cols) != 2) {
+        fclose(file);
+        return -1; // return error code
+    }
+
+    int result = initialize_matrix(mat, mat->rows, mat->cols);
+    if (result != 0) {
+        fclose(file);
+        return result; // return initialization error
+    }
+
+    for (int i = 0; i < mat->rows; i++) {
+        for (int j = 0; j < mat->cols; j++) {
+            if (fscanf(file, "%d", &MAT_AT(*mat, i, j)) != 1) {
+                fclose(file);
+                release_matrix(mat);
+                return -1; // return error code
+            }
+        }
+    }
+
+    fclose(file);
+    return 0; // success
+}
+
+// save a matrix to a file
+int mat_save(MAT* mat, const char* filename) {
+    FILE* file = fopen(filename, "w");
+    if (file == NULL) {
+        printf("Error opening file: %s\n", filename);
+        return -1; // return error code
+    }
+
+    fprintf(file, "%d %d\n", mat->rows, mat->cols);
+
+    for (int i = 0; i < mat->rows; i++) {
+        for (int j = 0; j < mat->cols; j++) {
+            fprintf(file, "%d ", MAT_AT(*mat, i, j));
+        }
+        fprintf(file, "\n");
+    }
+
+    fclose(file);
+    return 0; // success
+}
+
+// print the contents of a matrix
 void print_matrix(MAT mat) {
     for (int i = 0; i < mat.rows; i++) {
         for (int j = 0; j < mat.cols; j++) {
@@ -29,11 +180,10 @@ void print_matrix(MAT mat) {
     }
 }
 
-//add or subtract matrices
-void add_subtract_matrix(MAT A, MAT B, MAT* C, int add) {
-    if (A.cols != B.rows || A.rows != C->rows || B.cols != C->cols) {
-        printf("Incompatible matrix dimensions for multiplication\n");
-        return;
+// add or subtract two matrices and store the result in C
+int add_subtract_matrix(const MAT A, const MAT B, MAT* C, int add) {
+    if (A.rows != B.rows || A.cols != B.cols || A.rows != C->rows || A.cols != C->cols) {
+        return -1; // return error code for incompatible matrix dimensions
     }
 
     for (int i = 0; i < A.rows; i++) {
@@ -42,20 +192,21 @@ void add_subtract_matrix(MAT A, MAT B, MAT* C, int add) {
             MAT_AT(*C, i, j) = result;
         }
     }
+
+    return 0; // success
 }
 
-//Strassen's matrix multiplication algorithm
-void mat_multiply_strassen(MAT* A, MAT* B, MAT* C) {
+// multiply matrix A by matrix B using the Strassen algorithm
+int mat_multiply_strassen(const MAT* A, const MAT* B, MAT* C) {
     if (A->cols != B->rows || A->rows != C->rows || A->cols != C->cols) {
-        printf("Incompatible matrix dimensions for multiplication\n");
-        return;
+        return -1; // return error code for incompatible matrix dimensions
     }
 
-    int n = A->rows; //size of the matrix
+    int n = A->rows; // size of the matrix
 
     if (n == 1) {
         MAT_AT(*C, 0, 0) = MAT_AT(*A, 0, 0) * MAT_AT(*B, 0, 0);
-        return;
+        return 0; // success
     }
 
     int newSize = n / 2;
@@ -79,7 +230,6 @@ void mat_multiply_strassen(MAT* A, MAT* B, MAT* C) {
             MAT_AT(A12, i, j) = MAT_AT(*A, i, j + newSize);
             MAT_AT(A21, i, j) = MAT_AT(*A, i + newSize, j);
             MAT_AT(A22, i, j) = MAT_AT(*A, i + newSize, j + newSize);
-
             MAT_AT(B11, i, j) = MAT_AT(*B, i, j);
             MAT_AT(B12, i, j) = MAT_AT(*B, i, j + newSize);
             MAT_AT(B21, i, j) = MAT_AT(*B, i + newSize, j);
@@ -87,51 +237,67 @@ void mat_multiply_strassen(MAT* A, MAT* B, MAT* C) {
         }
     }
 
-    MAT M1, M2, M3, M4, M5, M6, M7;
-    initialize_matrix(&M1, newSize, newSize);
-    initialize_matrix(&M2, newSize, newSize);
-    initialize_matrix(&M3, newSize, newSize);
-    initialize_matrix(&M4, newSize, newSize);
-    initialize_matrix(&M5, newSize, newSize);
-    initialize_matrix(&M6, newSize, newSize);
-    initialize_matrix(&M7, newSize, newSize);
+    MAT P1, P2, P3, P4, P5, P6, P7;
+    initialize_matrix(&P1, newSize, newSize);
+    initialize_matrix(&P2, newSize, newSize);
+    initialize_matrix(&P3, newSize, newSize);
+    initialize_matrix(&P4, newSize, newSize);
+    initialize_matrix(&P5, newSize, newSize);
+    initialize_matrix(&P6, newSize, newSize);
+    initialize_matrix(&P7, newSize, newSize);
 
     MAT temp1, temp2;
     initialize_matrix(&temp1, newSize, newSize);
     initialize_matrix(&temp2, newSize, newSize);
 
-    add_subtract_matrix(B12, B22, &temp1, 0);
-    mat_multiply_strassen(&A11, &temp1, &M1);
-
-    add_subtract_matrix(A11, A12, &temp1, 1);
-    mat_multiply_strassen(&temp1, &B22, &M2);
-
-    add_subtract_matrix(A21, A11, &temp1, 0);
-    add_subtract_matrix(B11, B12, &temp2, 1);
-    mat_multiply_strassen(&temp1, &temp2, &M3);
-
-    add_subtract_matrix(A12, A22, &temp1, 0);
-    add_subtract_matrix(B21, B11, &temp2, 1);
-    mat_multiply_strassen(&temp1, &temp2, &M4);
-
+    // P1 = (A11 + A22) * (B11 + B22)
     add_subtract_matrix(A11, A22, &temp1, 1);
     add_subtract_matrix(B11, B22, &temp2, 1);
-    mat_multiply_strassen(&temp1, &temp2, &M5);
+    mat_multiply_strassen(&temp1, &temp2, &P1);
 
+    // P2 = (A21 + A22) * B11
     add_subtract_matrix(A21, A22, &temp1, 1);
-    mat_multiply_strassen(&temp1, &B11, &M6);
+    mat_multiply_strassen(&temp1, &B11, &P2);
 
+    // P3 = A11 * (B12 - B22)
     add_subtract_matrix(B12, B22, &temp1, 0);
-    mat_multiply_strassen(&A11, &temp1, &M7);
+    mat_multiply_strassen(&A11, &temp1, &P3);
 
-    add_subtract_matrix(M5, M4, &temp1, 1);
-    add_subtract_matrix(temp1, M2, &C11, 0);
-    add_subtract_matrix(M1, M2, &C12, 1);
-    add_subtract_matrix(M3, M4, &C21, 1);
-    add_subtract_matrix(M5, M1, &temp1, 1);
-    add_subtract_matrix(temp1, M3, &temp2, 0);
-    add_subtract_matrix(temp2, M7, &C22, 0);
+    // P4 = A22 * (B21 - B11)
+    add_subtract_matrix(B21, B11, &temp1, 0);
+    mat_multiply_strassen(&A22, &temp1, &P4);
 
+    // P5 = (A11 + A12) * B22
+    add_subtract_matrix(A11, A12, &temp1, 1);
+    mat_multiply_strassen(&temp1, &B22, &P5);
+
+    // P6 = (A21 - A11) * (B11 + B12)
+    add_subtract_matrix(A21, A11, &temp1, 0);
+    add_subtract_matrix(B11, B12, &temp2, 1);
+    mat_multiply_strassen(&temp1, &temp2, &P6);
+
+    // P7 = (A12 - A22) * (B21 + B22)
+    add_subtract_matrix(A12, A22, &temp1, 0);
+    add_subtract_matrix(B21, B22, &temp2, 1);
+    mat_multiply_strassen(&temp1, &temp2, &P7);
+
+    // C11 = P1 + P4 - P5 + P7
+    add_subtract_matrix(P1, P4, &temp1, 1);
+    add_subtract_matrix(temp1, P5, &temp2, 0);
+    add_subtract_matrix(temp2, P7, &C11, 1);
+
+    // C12 = P3 + P5
+    add_subtract_matrix(P3, P5, &C12, 1);
+
+    // C21 = P2 + P4
+    add_subtract_matrix(P2, P4, &C21, 1);
+
+    // C22 = P1 - P2 + P3 + P6
+    add_subtract_matrix(P1, P2, &temp1, 0);
+    add_subtract_matrix(temp1, P3, &temp2, 1);
+    add_subtract_matrix(temp2, P6, &C22, 1);
+
+    // collect the result into matrix C
     for (int i = 0; i < newSize; i++) {
         for (int j = 0; j < newSize; j++) {
             MAT_AT(*C, i, j) = MAT_AT(C11, i, j);
@@ -141,6 +307,7 @@ void mat_multiply_strassen(MAT* A, MAT* B, MAT* C) {
         }
     }
 
+    // free allocated memory
     release_matrix(&A11);
     release_matrix(&A12);
     release_matrix(&A21);
@@ -153,97 +320,15 @@ void mat_multiply_strassen(MAT* A, MAT* B, MAT* C) {
     release_matrix(&C12);
     release_matrix(&C21);
     release_matrix(&C22);
-    release_matrix(&M1);
-    release_matrix(&M2);
-    release_matrix(&M3);
-    release_matrix(&M4);
-    release_matrix(&M5);
-    release_matrix(&M6);
-    release_matrix(&M7);
+    release_matrix(&P1);
+    release_matrix(&P2);
+    release_matrix(&P3);
+    release_matrix(&P4);
+    release_matrix(&P5);
+    release_matrix(&P6);
+    release_matrix(&P7);
     release_matrix(&temp1);
     release_matrix(&temp2);
+
+    return 0; // success
 }
-
-//create a matrix with a specific type
-void mat_create_with_type(MAT* mat, int rows, int cols, int type) {
-    initialize_matrix(mat, rows, cols);
-    switch (type) {
-    case 1:
-        mat_create_with_type(mat, rows, cols, type);
-        break;
-    case 2:
-        mat_unit(mat);
-        break;  
-    case 3:
-        mat_random(mat);
-        break;
-    default:
-        printf("Invalid type\n");
-        break;
-    }
-}
-
-//create a matrix by reading from a file
-void mat_create_by_file(MAT* mat, const char* filename) {
-    FILE* file = fopen(filename, "r");
-    if (file == NULL) {
-        printf("Error opening file\n");
-        return;
-    }
-
-    fscanf(file, "%d%d", &mat->rows, &mat->cols);
-    initialize_matrix(mat, mat->rows, mat->cols);
-
-    for (int i = 0; i < mat->rows; i++) {
-        for (int j = 0; j < mat->cols; j++) {
-            fscanf(file, "%d", &MAT_AT(*mat, i, j));
-        }
-    }
-
-    fclose(file);
-}
-
-//save a matrix to a file
-void mat_save(MAT* mat, const char* filename) {
-    FILE* file = fopen(filename, "w");
-    if (file == NULL) {
-        printf("Error opening file\n");
-        return;
-    }
-
-    fprintf(file, "%d %d\n", mat->rows, mat->cols);
-
-    for (int i = 0; i < mat->rows; i++) {
-        for (int j = 0; j < mat->cols; j++) {
-            fprintf(file, "%d ", MAT_AT(*mat, i, j));
-        }
-        fprintf(file, "\n");
-    }
-
-    fclose(file);
-}
-
-//create an identity matrix
-void mat_unit(MAT* mat) {
-    if (mat->rows != mat->cols) {
-        printf("Identity matrix must be square\n");
-        return;
-    }
-
-    for (int i = 0; i < mat->rows; i++) {
-        for (int j = 0; j < mat->cols; j++) {
-            MAT_AT(*mat, i, j) = (i == j) ? 1 : 0;
-        }
-    }
-}
-
-//populate a matrix with random values
-void mat_random(MAT* mat) {
-    srand(time(NULL));
-    for (int i = 0; i < mat->rows; i++) {
-        for (int j = 0; j < mat->cols; j++) {
-            MAT_AT(*mat, i, j) = rand() % 200 - 100;
-        }
-    }
-}
-
