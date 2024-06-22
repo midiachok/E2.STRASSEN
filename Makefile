@@ -14,6 +14,6 @@ matrices.o: matrices.c matrices.h
 	$(CC) $(CFLAGS) -c matrices.c
 
 clean:
-	$(DELETE) $(OBJ_FILES) $(TARGET)
+	$(DELETE) -f $(OBJ_FILES) $(TARGET)
 
 .PHONY: clean
