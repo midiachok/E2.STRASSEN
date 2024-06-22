@@ -3,7 +3,46 @@
 #include <stdlib.h>
 #include <time.h>
 #include <math.h>
+
 #pragma warning(disable:4996)
+
+/* ------------ TESTOVACIE PROCEDURY KTORE NIE SU SUCASTOU ZADANIA --------- */
+
+#define MAT_DIFF 0
+#define MAT_EQ   1
+
+char mat_std_mul(MAT *A, MAT *B, MAT *C)
+{
+    unsigned int i,j,k;
+    int aux;
+
+    for(i=0;i<A->rows;i++)
+        for(j=0;j<B->cols;j++)
+        {
+            for(aux=0,k=0;k<A->cols;k++)
+                aux += MAT_AT(*A,i,k)*MAT_AT(*B,k,j);
+            MAT_AT(*C,i,j) = aux;
+        }
+}
+
+char mat_cmp(MAT *A, MAT *B)
+{
+    unsigned int i, j;
+
+    if( (A->cols != B->cols) || (A->rows != B->rows) )
+        return MAT_DIFF;
+
+    for(i=0;i<A->rows;i++)
+        for(j=0;j<A->cols;j++)
+        {
+            if(MAT_AT(*A,i,j) != MAT_AT(*B,i,j))
+                return MAT_DIFF;
+        }
+
+    return MAT_EQ;
+}
+
+/* ------------ UI --------------------------------------------------------- */
 
 void display_menu() {
     printf("\nMatrix Operations Menu:\n1. Add matrices\n2. Subtract matrices\n3. Multiply matrices using Strassen's algorithm\n0. Exit\n");
@@ -88,7 +127,7 @@ void save_matrix_with_prompt(MAT* matrix) {
 }
 
 int main() {
-    MAT A, B, C;
+    MAT A, B, C, D;
     int choice, n;
 
     while (1) {
@@ -159,6 +198,7 @@ int main() {
             initialize_matrix(&A, pow(2, n), pow(2, n));
             initialize_matrix(&B, pow(2, n), pow(2, n));
             initialize_matrix(&C, pow(2, n), pow(2, n));
+            initialize_matrix(&D, pow(2, n), pow(2, n));
 
             printf("Matrix A:\n");
             choose_matrix_creation_method(&A, n);
@@ -170,15 +210,25 @@ int main() {
 
 
             mat_multiply_strassen(&A, &B, &C);
+            mat_std_mul(&A, &B, &D);
 
             printf("Result of multiplication using Strassen's algorithm:\n");
             print_matrix_info(C);
             save_matrix_with_prompt(&C);
 
+            printf("Result of multiplication using standard algorithm:\n");
+            print_matrix_info(D);
+            save_matrix_with_prompt(&D);
+
+            if( mat_cmp(&C,&D) )
+                printf("Results do not differ.\n");
+            else
+                printf("ERROR: results DO differ!\n");
 
             release_matrix(&A);
             release_matrix(&B);
             release_matrix(&C);
+            release_matrix(&D);
             break;
 
         case 4:
