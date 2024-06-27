@@ -122,25 +122,37 @@ int subtract_matrices(const MAT* A, const MAT* B, MAT* C) {
     return 0;
 }
 
+// function to create a matrix with specified dimensions
+MAT* mat_create_with_type(unsigned int rows, unsigned int cols) {
+    MAT* matrix = (MAT*)malloc(sizeof(MAT));
+    if (matrix == NULL) {
+        printf("Memory allocation failed.\n");
+        return NULL;
+    }
 
-int mat_create_with_type(MAT* mat, int rows, int cols, int type) {
-    switch (type) {
-    case 1:
-        return initialize_matrix(mat, rows, cols);
-    case 2:
-        return create_random_matrix(mat, rows, cols);
-    case 3:
-        return create_identity_matrix(mat, rows);
-    case 4: {
-        char filename[100];
-        printf("Enter the filename to load the matrix from: ");
-        scanf("%s", filename);
-        return load_matrix_from_file(mat, filename);
+    matrix->rows = rows;
+    matrix->cols = cols;
+    matrix->matrix = (double**)malloc(rows * sizeof(double*));
+    if (matrix->matrix == NULL) {
+        printf("Memory allocation failed.\n");
+        free(matrix);
+        return NULL;
     }
-    default:
-        printf("Invalid matrix type.\n");
-        return -1;
+
+    for (unsigned int i = 0; i < rows; ++i) {
+        matrix->matrix[i] = (double*)malloc(cols * sizeof(double));
+        if (matrix->matrix[i] == NULL) {
+            printf("Memory allocation failed.\n");
+            // release previously allocated memory
+            for (unsigned int j = 0; j < i; ++j)
+                free(matrix->matrix[j]);
+            free(matrix->matrix);
+            free(matrix);
+            return NULL;
+        }
     }
+
+    return matrix;
 }
 
 
@@ -266,7 +278,7 @@ int multiply_matrices_strassen(const MAT* A, const MAT* B, MAT* C) {
     release_matrix(&B22);
     release_matrix(&P1);
     release_matrix(&P2);
-    release_matrix(&P3);
+    release_matrix(&P3);    
     release_matrix(&P4);
     release_matrix(&P5);
     release_matrix(&P6);

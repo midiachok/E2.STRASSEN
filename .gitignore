@@ -1,3 +1,2 @@
-exac.exe
-main.o
-matrices.o
+*.exe
+*.o

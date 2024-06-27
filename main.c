@@ -2,46 +2,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
-
 #pragma warning(disable:4996)
-
-/* ------------ TESTOVACIE PROCEDURY KTORE NIE SU SUCASTOU ZADANIA --------- */
-
-#define MAT_DIFF 0
-#define MAT_EQ   1
-
-char mat_std_mul(MAT *A, MAT *B, MAT *C)
-{
-    unsigned int i,j,k;
-    int aux;
-
-    for(i=0;i<A->rows;i++)
-        for(j=0;j<B->cols;j++)
-        {
-            for(aux=0,k=0;k<A->cols;k++)
-                aux += MAT_AT(*A,i,k)*MAT_AT(*B,k,j);
-            MAT_AT(*C,i,j) = aux;
-        }
-}
-
-char mat_cmp(MAT *A, MAT *B)
-{
-    unsigned int i, j;
-
-    if( (A->cols != B->cols) || (A->rows != B->rows) )
-        return MAT_DIFF;
-
-    for(i=0;i<A->rows;i++)
-        for(j=0;j<A->cols;j++)
-        {
-            if(MAT_AT(*A,i,j) != MAT_AT(*B,i,j))
-                return MAT_DIFF;
-        }
-
-    return MAT_EQ;
-}
-
-/* ------------ UI --------------------------------------------------------- */
 
 void display_menu() {
     printf("\nMatrix Operations Menu:\n1. Add matrices\n2. Subtract matrices\n3. Multiply matrices using Strassen's algorithm\n0. Exit\n");
@@ -62,27 +23,41 @@ void choose_matrix_creation_method(MAT* matrix, int n) {
 
     switch (type) {
     case 1:
-        if (mat_create_with_type(matrix, size, size, 1) != 0) {
+        // manually create matrix using mat_create_with_type
+        *matrix = *mat_create_with_type(size, size);
+        if (matrix == NULL) {
             printf("Failed to create matrix\n");
             check_print = 0;
-            choose_matrix_creation_method(matrix,n);
+        }
+        else {
+            printf("Matrix created:\n");
+            print_matrix(matrix);
         }
         break;
     case 2:
+        // create random matrix
         if (create_random_matrix(matrix, size, size) != 0) {
             printf("Failed to create matrix with random values\n");
             check_print = 0;
-            choose_matrix_creation_method(matrix,n);
+        }
+        else {
+            printf("Matrix created:\n");
+            print_matrix(matrix);
         }
         break;
     case 3:
+        // create identity matrix
         if (create_identity_matrix(matrix, size) != 0) {
             printf("Failed to create identity matrix\n");
             check_print = 0;
-            choose_matrix_creation_method(matrix,n);
+        }
+        else {
+            printf("Matrix created:\n");
+            print_matrix(matrix);
         }
         break;
     case 4: {
+        // load matrix from file
         char filename[100];
         printf("Enter the filename to load the matrix from: ");
         scanf("%s", filename);
@@ -90,26 +65,28 @@ void choose_matrix_creation_method(MAT* matrix, int n) {
         if (load_matrix_from_file(matrix, filename) != 0) {
             printf("Failed to load matrix from file\n");
             check_print = 0;
-            choose_matrix_creation_method(matrix,n);
+            choose_matrix_creation_method(matrix, n);
         }
-
-        if (matrix->rows != size || matrix->cols != size) {
-            printf("Loaded matrix size does not match required size (2^%d x 2^%d).\n", n, n);
-            check_print = 0;
-            choose_matrix_creation_method(matrix,n);
+        else {
+            if (matrix->rows != size || matrix->cols != size) {
+                printf("Loaded matrix size does not match required size (2^%d x 2^%d).\n", n, n);
+                check_print = 0;
+                choose_matrix_creation_method(matrix, n);
+            }
+            else {
+                printf("Matrix loaded:\n");
+                print_matrix(matrix);
+            }
         }
         break;
     }
     default:
         printf("Invalid matrix creation type.\n");
         check_print = 0;
-        choose_matrix_creation_method(matrix,n);
     }
-
-    
-    if (check_print) {
-        printf("Matrix created:\n");
-        print_matrix(matrix);
+    if (!check_print) {
+        // clean up if matrix creation failed
+        release_matrix(matrix);
     }
 }
 
@@ -131,7 +108,7 @@ void save_matrix_with_prompt(MAT* matrix) {
 }
 
 int main() {
-    MAT A, B, C, D;
+    MAT A, B, C;
     int choice, n;
 
     while (1) {
@@ -210,19 +187,12 @@ int main() {
             printf("Enter n for matrix size (matrix will be 2^n x 2^n): ");
             scanf("%d", &n);
 
-<<<<<<< HEAD
             if (initialize_matrix(&A, pow(2, n), pow(2, n)) != 0 ||
                 initialize_matrix(&B, pow(2, n), pow(2, n)) != 0 ||
                 initialize_matrix(&C, pow(2, n), pow(2, n)) != 0) {
                 printf("Failed to initialize matrices\n");
                 return -1;
             }
-=======
-            initialize_matrix(&A, pow(2, n), pow(2, n));
-            initialize_matrix(&B, pow(2, n), pow(2, n));
-            initialize_matrix(&C, pow(2, n), pow(2, n));
-            initialize_matrix(&D, pow(2, n), pow(2, n));
->>>>>>> b06c4e57b8106d37fa61a1f35b48985ede8db4ac
 
             printf("Matrix A:\n");
             choose_matrix_creation_method(&A, n);
@@ -232,37 +202,18 @@ int main() {
             choose_matrix_creation_method(&B, n);
             save_matrix_with_prompt(&B);
 
-<<<<<<< HEAD
             if (multiply_matrices_strassen(&A, &B, &C) != 0) {
                 printf("Matrix multiplication failed\n");
                 return -1;
             }
-=======
-
-            mat_multiply_strassen(&A, &B, &C);
-            mat_std_mul(&A, &B, &D);
->>>>>>> b06c4e57b8106d37fa61a1f35b48985ede8db4ac
 
             printf("Result of multiplication using Strassen's algorithm:\n");
             print_matrix_info(&C);
             save_matrix_with_prompt(&C);
 
-<<<<<<< HEAD
-=======
-            printf("Result of multiplication using standard algorithm:\n");
-            print_matrix_info(D);
-            save_matrix_with_prompt(&D);
-
-            if( mat_cmp(&C,&D) )
-                printf("Results do not differ.\n");
-            else
-                printf("ERROR: results DO differ!\n");
-
->>>>>>> b06c4e57b8106d37fa61a1f35b48985ede8db4ac
             release_matrix(&A);
             release_matrix(&B);
             release_matrix(&C);
-            release_matrix(&D);
             break;
 
         case 0:
