@@ -1,7 +1,7 @@
-#include "matrices.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
+#include "matrices.h"
 #pragma warning(disable:4996)
 
 void display_menu() {
@@ -36,25 +36,15 @@ void choose_matrix_creation_method(MAT* matrix, int n) {
         break;
     case 2:
         // create random matrix
-        if (create_random_matrix(matrix, size, size) != 0) {
-            printf("Failed to create matrix with random values\n");
-            check_print = 0;
-        }
-        else {
-            printf("Matrix created:\n");
-            print_matrix(matrix);
-        }
+        create_random_matrix(matrix);
+        printf("Matrix created:\n");
+        print_matrix(matrix);
         break;
     case 3:
         // create identity matrix
-        if (create_identity_matrix(matrix, size) != 0) {
-            printf("Failed to create identity matrix\n");
-            check_print = 0;
-        }
-        else {
-            printf("Matrix created:\n");
-            print_matrix(matrix);
-        }
+        create_identity_matrix(matrix);
+        printf("Matrix created:\n");
+        print_matrix(matrix);
         break;
     case 4: {
         // load matrix from file
@@ -62,18 +52,24 @@ void choose_matrix_creation_method(MAT* matrix, int n) {
         printf("Enter the filename to load the matrix from: ");
         scanf("%s", filename);
 
-        if (load_matrix_from_file(matrix, filename) != 0) {
+        MAT* loaded_matrix = load_matrix_from_file(filename);
+        if (loaded_matrix == NULL) {
             printf("Failed to load matrix from file\n");
             check_print = 0;
-            choose_matrix_creation_method(matrix, n);
+            release_matrix(loaded_matrix);
+            initialize_matrix(loaded_matrix, size, size);
+            choose_matrix_creation_method( matrix, n);
         }
         else {
-            if (matrix->rows != size || matrix->cols != size) {
+            if (loaded_matrix->rows != size || loaded_matrix->cols != size) {
                 printf("Loaded matrix size does not match required size (2^%d x 2^%d).\n", n, n);
                 check_print = 0;
+                release_matrix(loaded_matrix);
+                initialize_matrix(loaded_matrix, size, size);
                 choose_matrix_creation_method(matrix, n);
             }
             else {
+                *matrix = *loaded_matrix;
                 printf("Matrix loaded:\n");
                 print_matrix(matrix);
             }

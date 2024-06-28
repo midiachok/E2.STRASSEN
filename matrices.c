@@ -10,10 +10,11 @@ int initialize_matrix(MAT* mat, int rows, int cols) {
     mat->cols = cols;
     mat->matrix = (int*)malloc(rows * cols * sizeof(int));
     if (mat->matrix == NULL) {
-        return -1;
+        return -1;  // memory allocation failure
     }
-    return 0;
+    return 0;  // success
 }
+
 
 void release_matrix(MAT* mat) {
     if (mat->matrix != NULL) {
@@ -22,41 +23,43 @@ void release_matrix(MAT* mat) {
     }
 }
 
-int create_identity_matrix(MAT* mat, int size) {
-    if (initialize_matrix(mat, size, size) != 0) {
-        return -1;
-    }
+void create_identity_matrix(MAT* mat) {
+    int size = mat->rows;  // assuming mat is already initialized with size x size
     for (int i = 0; i < size; i++) {
         for (int j = 0; j < size; j++) {
             MAT_AT(*mat, i, j) = (i == j) ? 1 : 0;
         }
     }
-    return 0;
 }
 
-int create_random_matrix(MAT* mat, int rows, int cols) {
-    if (initialize_matrix(mat, rows, cols) != 0) {
-        return -1;
-    }
+
+void create_random_matrix(MAT* mat) {
+    int rows = mat->rows;
+    int cols = mat->cols;
     srand(time(NULL));
     for (int i = 0; i < rows; i++) {
         for (int j = 0; j < cols; j++) {
-            MAT_AT(*mat, i, j) = (rand() % 201) - 100;
+            MAT_AT(*mat, i, j) = (rand() % 201) - 100;  // random number between -100 and 100
         }
     }
-    return 0;
 }
 
-int load_matrix_from_file(MAT* mat, const char* filename) {
+
+MAT* load_matrix_from_file(const char* filename) {
     FILE* file = fopen(filename, "r");
     if (file == NULL) {
-        return -1;
+        return NULL;  // file not found
     }
-    release_matrix(mat);
+    MAT* mat = (MAT*)malloc(sizeof(MAT));
+    if (mat == NULL) {
+        fclose(file);
+        return NULL;  // memory allocation failure
+    }
     fscanf(file, "%d %d", &mat->rows, &mat->cols);
     if (initialize_matrix(mat, mat->rows, mat->cols) != 0) {
         fclose(file);
-        return -1;
+        free(mat);
+        return NULL;  // failed to initialize matrix
     }
     for (int i = 0; i < mat->rows; i++) {
         for (int j = 0; j < mat->cols; j++) {
@@ -64,13 +67,15 @@ int load_matrix_from_file(MAT* mat, const char* filename) {
         }
     }
     fclose(file);
-    return 0;
+    return mat;  // success
 }
 
-int save_matrix_to_file(const MAT* mat, const char* filename) {
+
+
+char save_matrix_to_file(MAT* mat, char* filename) {
     FILE* file = fopen(filename, "w");
     if (file == NULL) {
-        return -1;
+        return -1;  // failed to open file
     }
     fprintf(file, "%d %d\n", mat->rows, mat->cols);
     for (int i = 0; i < mat->rows; i++) {
@@ -80,8 +85,9 @@ int save_matrix_to_file(const MAT* mat, const char* filename) {
         fprintf(file, "\n");
     }
     fclose(file);
-    return 0;
+    return 0;  // success
 }
+
 
 void print_matrix(const MAT* mat) {
     for (int i = 0; i < mat->rows; i++) {
@@ -132,28 +138,16 @@ MAT* mat_create_with_type(unsigned int rows, unsigned int cols) {
 
     matrix->rows = rows;
     matrix->cols = cols;
-    matrix->matrix = (double**)malloc(rows * sizeof(double*));
+    matrix->matrix = (int*)malloc(rows * cols * sizeof(int));
     if (matrix->matrix == NULL) {
         printf("Memory allocation failed.\n");
         free(matrix);
         return NULL;
     }
 
-    for (unsigned int i = 0; i < rows; ++i) {
-        matrix->matrix[i] = (double*)malloc(cols * sizeof(double));
-        if (matrix->matrix[i] == NULL) {
-            printf("Memory allocation failed.\n");
-            // release previously allocated memory
-            for (unsigned int j = 0; j < i; ++j)
-                free(matrix->matrix[j]);
-            free(matrix->matrix);
-            free(matrix);
-            return NULL;
-        }
-    }
-
     return matrix;
 }
+
 
 
 // multiply matrix A by matrix B using the Strassen algorithm

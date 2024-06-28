@@ -33,8 +33,7 @@ void release_matrix(MAT* mat);
  * @param size Size of the identity matrix (i.e., number of rows and columns)
  * @return 0 on success, -1 on failure
  */
-int create_identity_matrix(MAT* mat, int size);
-
+void create_identity_matrix(MAT* mat);
 /**
  * Fill a matrix with random values
  *
@@ -43,8 +42,7 @@ int create_identity_matrix(MAT* mat, int size);
  * @param cols Number of columns for the matrix
  * @return 0 on success, -1 on failure
  */
-int create_random_matrix(MAT* mat, int rows, int cols);
-
+void create_random_matrix(MAT* mat);
 /**
  * Create a matrix from a file
  *
@@ -52,8 +50,7 @@ int create_random_matrix(MAT* mat, int rows, int cols);
  * @param filename Name of the file to load the matrix from
  * @return 0 on success, -1 on failure (e.g., file not found, memory allocation failure)
  */
-int load_matrix_from_file(MAT* mat, const char* filename);
-
+MAT* load_matrix_from_file(const char* filename);
 /**
  * Save a matrix to a file
  *
@@ -61,7 +58,7 @@ int load_matrix_from_file(MAT* mat, const char* filename);
  * @param filename Name of the file to save the matrix to
  * @return 0 on success, -1 on failure (e.g., file cannot be opened)
  */
-int save_matrix_to_file(const MAT* mat, const char* filename);
+char save_matrix_to_file(MAT* mat, char* filename);
 
 /**
  * Print the contents of a matrix
@@ -108,7 +105,6 @@ int multiply_matrices_strassen(const MAT* A, const MAT* B, MAT* C);
  * @return Pointer to the created MAT structure, or NULL on failure
  */
 MAT* mat_create_with_type(unsigned int rows, unsigned int cols);
-
 
 
 #endif // MATRICES_H
